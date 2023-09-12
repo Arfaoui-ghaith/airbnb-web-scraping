@@ -26,6 +26,7 @@ const counting = async (path) => {
         }
         console.log('total',total);
     }
+    return total;
 }
 
 const categoryRating = (obj) => {
@@ -40,13 +41,17 @@ const formatting = async () => {
     for(let i=1; i<6; i++){
         let path = `../milestone ${i}`;
         if (existsSync(path)) {
+            console.log(path,'exists!')
             let states = getDirectories(path);
+            console.log(states.length,'states founds',states);
             if(states.length > 0){
                 for(let state of states.slice(0,10)){
+                    console.log('start by',state);
                     let listings = await readCSV(`${path}/${state}/listings.csv`)
                     let reviews = await readCSV(`${path}/${state}/reviews.csv`)
                     let prices = await readCSV(`${path}/${state}/prices.csv`)
-                    for(let listing of listings.slice(0,1)){
+                    console.log(listings.length,'listings found, start formatting...')
+                    for(let listing of listings.slice(0,10)){
                         let price = prices.find(el => el.listingId === listing.listingId);
                         let review = reviews.filter(el => el.listingId === listing.listingId);
                         let row = {
@@ -90,12 +95,14 @@ const formatting = async () => {
                             reviews: review?.map(el => el.text)
                         };
                         let rowDetails = await converter.json2csv(row, {delimiter: {field: ';'}});
-                        if((statSync('states.csv').size === 0)) {
+
+                        console.log((statSync('states.csv').size === 0),existsSync('states.csv'));
+                        if(!(statSync('states.csv').size === 0)) {
                             rowDetails=rowDetails.split(';reviews\n')[1]+"\n";
                         }
+                        console.log(rowDetails);
                         appendFile('states.csv', rowDetails, function (err) {
                             if (err) return console.log(err);
-
                         });
                     }
                 }
